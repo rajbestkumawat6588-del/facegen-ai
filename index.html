@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FaceGen AI — Apna Chehra, Naya Andaaz</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0f;
+      --surface: #12121a;
+      --surface2: #1a1a26;
+      --border: #2a2a3d;
+      --accent: #ff6b35;
+      --accent2: #c850c0;
+      --glow: rgba(255, 107, 53, 0.15);
+      --text: #f0f0f8;
+      --muted: #7a7a99;
+      --success: #39d98a;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Animated background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 40% at 20% 20%, rgba(200,80,192,0.08) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 50% at 80% 80%, rgba(255,107,53,0.06) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 20px 80px;
+    }
+
+    /* Header */
+    header {
+      text-align: center;
+      margin-bottom: 56px;
+      animation: fadeDown 0.7s ease both;
+    }
+
+    .logo-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(135deg, rgba(255,107,53,0.15), rgba(200,80,192,0.15));
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 6px 16px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--accent);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+
+    .logo-badge span { font-size: 16px; }
+
+    h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2.2rem, 5vw, 3.8rem);
+      font-weight: 800;
+      line-height: 1.1;
+      background: linear-gradient(135deg, #fff 30%, var(--accent) 70%, var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 14px;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 1.05rem;
+      font-weight: 300;
+      max-width: 500px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    /* Main card */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 40px;
+      animation: fadeUp 0.7s 0.15s ease both;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+    }
+
+    @media (max-width: 640px) {
+      .two-col { grid-template-columns: 1fr; }
+      .card { padding: 24px; }
+    }
+
+    /* Upload zone */
+    .upload-label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    .upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: 16px;
+      padding: 28px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.25s;
+      background: var(--surface2);
+      position: relative;
+      overflow: hidden;
+      min-height: 200px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .upload-zone:hover,
+    .upload-zone.dragover {
+      border-color: var(--accent);
+      background: rgba(255,107,53,0.05);
+      box-shadow: 0 0 0 4px var(--glow);
+    }
+
+    .upload-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+
+    .upload-icon {
+      font-size: 2.5rem;
+      filter: grayscale(0.3);
+    }
+
+    .upload-text {
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .upload-text strong {
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    #preview-img {
+      max-width: 100%;
+      max-height: 200px;
+      border-radius: 10px;
+      object-fit: cover;
+      display: none;
+    }
+
+    /* Face lock badge */
+    .face-lock {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 10px;
+      background: rgba(57, 217, 138, 0.1);
+      border: 1px solid rgba(57, 217, 138, 0.25);
+      border-radius: 100px;
+      padding: 4px 12px;
+      font-size: 0.75rem;
+      color: var(--success);
+    }
+
+    /* Right side */
+    .right-side {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .field-group label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    textarea {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      padding: 14px 16px;
+      resize: vertical;
+      min-height: 110px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--glow);
+    }
+
+    textarea::placeholder { color: var(--muted); }
+
+    /* Prompt chips */
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+
+    .chip {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 5px 12px;
+      font-size: 0.76rem;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.2s;
+      user-select: none;
+    }
+
+    .chip:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(255,107,53,0.07);
+    }
+
+    /* Generate button */
+    .btn-generate {
+      width: 100%;
+      padding: 16px;
+      border: none;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff;
+      font-family: 'Syne', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      transition: all 0.25s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-generate::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .btn-generate:hover:not(:disabled)::after { opacity: 1; }
+
+    .btn-generate:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(255,107,53,0.35);
+    }
+
+    .btn-generate:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Status */
+    .status-bar {
+      display: none;
+      align-items: center;
+      gap: 12px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 18px;
+      font-size: 0.88rem;
+      color: var(--muted);
+      margin-top: 16px;
+    }
+
+    .status-bar.show { display: flex; }
+
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      flex-shrink: 0;
+    }
+
+    /* Result section */
+    .result-section {
+      margin-top: 36px;
+      display: none;
+      animation: fadeUp 0.5s ease both;
+    }
+
+    .result-section.show { display: block; }
+
+    .result-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .result-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--success);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-download {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-size: 0.82rem;
+      padding: 7px 14px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .btn-download:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .result-img {
+      width: 100%;
+      max-width: 500px;
+      border-radius: 18px;
+      display: block;
+      margin: 0 auto;
+      border: 1px solid var(--border);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+
+    /* Error box */
+    .error-box {
+      display: none;
+      background: rgba(255, 80, 80, 0.08);
+      border: 1px solid rgba(255, 80, 80, 0.25);
+      border-radius: 12px;
+      padding: 14px 18px;
+      font-size: 0.88rem;
+      color: #ff8080;
+      margin-top: 16px;
+    }
+
+    .error-box.show { display: block; }
+
+    /* Keyframes */
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Steps info */
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-top: 48px;
+      animation: fadeUp 0.7s 0.3s ease both;
+    }
+
+    @media (max-width: 540px) { .steps { grid-template-columns: 1fr; } }
+
+    .step {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .step-num {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.8rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+    }
+
+    .step-title {
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .step-desc {
+      font-size: 0.76rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="logo-badge"><span>✦</span> AI Powered</div>
+    <h1>FaceGen AI</h1>
+    <p class="subtitle">Apna photo upload karo, koi bhi scene imagine karo — chehra bilkul wahi rahega</p>
+  </header>
+
+  <div class="card">
+    <div class="two-col">
+      <!-- Left: Upload -->
+      <div>
+        <span class="upload-label">📸 Apna Photo</span>
+        <div class="upload-zone" id="uploadZone">
+          <input type="file" id="photoInput" accept="image/*" />
+          <div id="uploadPlaceholder">
+            <div class="upload-icon">🤳</div>
+            <div class="upload-text"><strong>Click karein ya drag karein</strong><br>JPG, PNG, WEBP • Max 10MB</div>
+          </div>
+          <img id="preview-img" alt="Preview" />
+        </div>
+        <div class="face-lock">🔒 Face Lock: ON — Chehra preserve rahega</div>
+      </div>
+
+      <!-- Right: Prompt + Button -->
+      <div class="right-side">
+        <div class="field-group">
+          <label>✍️ Apna Scene Likhein</label>
+          <textarea id="promptInput" placeholder="Jaise: As a royal king wearing golden armor in a medieval palace, dramatic lighting..."></textarea>
+        </div>
+
+        <div>
+          <span class="upload-label" style="margin-bottom:8px;display:block;">⚡ Quick Prompts</span>
+          <div class="chips">
+            <span class="chip" onclick="setPrompt(this)">Royal King 👑</span>
+            <span class="chip" onclick="setPrompt(this)">Astronaut 🚀</span>
+            <span class="chip" onclick="setPrompt(this)">Movie Hero 🎬</span>
+            <span class="chip" onclick="setPrompt(this)">Cyberpunk Style 🤖</span>
+            <span class="chip" onclick="setPrompt(this)">Watercolor Art 🎨</span>
+            <span class="chip" onclick="setPrompt(this)">Business Portrait 💼</span>
+          </div>
+        </div>
+
+        <button class="btn-generate" id="generateBtn" onclick="generate()">
+          ✦ Generate Karo
+        </button>
+      </div>
+    </div>
+
+    <!-- Status -->
+    <div class="status-bar" id="statusBar">
+      <div class="spinner"></div>
+      <span id="statusText">Image generate ho rahi hai, thoda wait karein (~30-60 sec)...</span>
+    </div>
+
+    <!-- Error -->
+    <div class="error-box" id="errorBox"></div>
+
+    <!-- Result -->
+    <div class="result-section" id="resultSection">
+      <div class="result-header">
+        <div class="result-title">✅ Image Ready!</div>
+        <a id="downloadBtn" class="btn-download" download="facegen.png">⬇ Download</a>
+      </div>
+      <img id="resultImg" class="result-img" alt="Generated Image" />
+    </div>
+  </div>
+
+  <!-- Steps -->
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">01</div>
+      <div class="step-title">Photo Upload</div>
+      <div class="step-desc">Apna clear face photo upload karein (seedha chehra best result deta hai)</div>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <div class="step-title">Prompt Likhein</div>
+      <div class="step-desc">Koi bhi scene likhein — koi bhi style, koi bhi background</div>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <div class="step-title">AI Magic ✨</div>
+      <div class="step-desc">InstantID AI aapka chehra preserve karte hue naya scene generate karega</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const promptMap = {
+  "Royal King 👑": "as a majestic royal king wearing golden armor and crown, in a grand medieval palace, dramatic cinematic lighting, ultra detailed, 8k",
+  "Astronaut 🚀": "as a NASA astronaut floating in outer space with Earth in the background, photorealistic, cinematic, dramatic lighting",
+  "Movie Hero 🎬": "as a Hollywood action movie hero, dramatic pose, moody cinematic lighting, film still, ultra detailed",
+  "Cyberpunk Style 🤖": "in a futuristic cyberpunk city at night, neon lights reflecting, cyberpunk outfit, blade runner aesthetic",
+  "Watercolor Art 🎨": "as a beautiful watercolor portrait painting, artistic brushstrokes, soft colors, fine art illustration",
+  "Business Portrait 💼": "as a professional corporate executive, formal attire, clean studio background, LinkedIn profile photo style, sharp details"
+};
+
+function setPrompt(el) {
+  const label = el.textContent.trim();
+  document.getElementById('promptInput').value = promptMap[label] || label;
+  document.querySelectorAll('.chip').forEach(c => c.style.borderColor = '');
+  el.style.borderColor = 'var(--accent)';
+  el.style.color = 'var(--accent)';
+}
+
+// Upload preview
+const photoInput = document.getElementById('photoInput');
+const previewImg = document.getElementById('preview-img');
+const placeholder = document.getElementById('uploadPlaceholder');
+
+photoInput.addEventListener('change', function() {
+  const file = this.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    previewImg.src = e.target.result;
+    previewImg.style.display = 'block';
+    placeholder.style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+});
+
+// Drag and drop
+const zone = document.getElementById('uploadZone');
+zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+zone.addEventListener('drop', e => {
+  e.preventDefault();
+  zone.classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (file) {
+    photoInput.files = e.dataTransfer.files;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      previewImg.src = ev.target.result;
+      previewImg.style.display = 'block';
+      placeholder.style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+  }
+});
+
+async function generate() {
+  const file = photoInput.files[0];
+  const prompt = document.getElementById('promptInput').value.trim();
+  const btn = document.getElementById('generateBtn');
+  const statusBar = document.getElementById('statusBar');
+  const errorBox = document.getElementById('errorBox');
+  const resultSection = document.getElementById('resultSection');
+
+  // Reset
+  errorBox.className = 'error-box';
+  resultSection.className = 'result-section';
+
+  if (!file) { showError('Pehle apna photo upload karein! 📸'); return; }
+  if (!prompt) { showError('Koi prompt likhein ya quick prompt select karein! ✍️'); return; }
+
+  btn.disabled = true;
+  statusBar.className = 'status-bar show';
+
+  const statuses = [
+    'Photo upload ho rahi hai...',
+    'Face detect kar rahe hain...',
+    'AI scene generate kar raha hai (~30-60 sec)...',
+    'Almost done, render ho raha hai...'
+  ];
+  let si = 0;
+  const stInt = setInterval(() => {
+    si = (si + 1) % statuses.length;
+    document.getElementById('statusText').textContent = statuses[si];
+  }, 8000);
+
+  try {
+    const formData = new FormData();
+    formData.append('photo', file);
+    formData.append('prompt', prompt);
+
+    const resp = await fetch('/generate', { method: 'POST', body: formData });
+    const data = await resp.json();
+
+    if (data.success) {
+      document.getElementById('resultImg').src = data.image_url;
+      document.getElementById('downloadBtn').href = data.image_url;
+      resultSection.className = 'result-section show';
+      resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      showError(data.error || 'Kuch gadbad ho gayi, dobara try karein');
+    }
+  } catch(e) {
+    showError('Network error: ' + e.message);
+  } finally {
+    clearInterval(stInt);
+    statusBar.className = 'status-bar';
+    btn.disabled = false;
+  }
+}
+
+function showError(msg) {
+  const eb = document.getElementById('errorBox');
+  eb.textContent = '⚠️ ' + msg;
+  eb.className = 'error-box show';
+}
+</script>
+</body>
+</html>
